@@ -16,6 +16,7 @@ import shouse.core.node.response.Response;
 import shouse.core.node.response.ResponseStatus;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PowerSocketNode extends Node {
@@ -25,13 +26,14 @@ public class PowerSocketNode extends Node {
     private int nodeLocationId;
     private String description;
     private boolean isSwitched;
-    private Map<String,Notifier> requestsMap = new HashMap();
+    private List<Notifier> notifiers;
 
-    public PowerSocketNode(int id, int nodeLocationId, String description, Communicator communicator) {
+    public PowerSocketNode(int id, int nodeLocationId, String description, Communicator communicator, List<Notifier> notifiers) {
         super(id,  NodeType.POWER_SOCKET.getId(), false);
         this.nodeLocationId = nodeLocationId;
         this.description = description;
         this.communicator = communicator;
+        this.notifiers = notifiers;
         log.info("PowerSocketNode created");
     }
 
@@ -71,7 +73,6 @@ public class PowerSocketNode extends Node {
         }
 
         String requestId = String.valueOf(RequestIdGenerator.generateId());
-        requestsMap.put(requestId, request.getNotifier());
 
         response.setStatus(ResponseStatus.SUCCESS);
         response.put(SystemConstants.executionStatus, ExecutionStatus.IN_PROGRESS);
@@ -90,16 +91,15 @@ public class PowerSocketNode extends Node {
 
         if(packet.getData().get(SystemConstants.nodeTaskStatus).equals("executed")){
             String requestId = packet.getData().get(SystemConstants.requestId);
-            Notifier notifier =  requestsMap.get(requestId);
+            notifiers.stream().forEach(notifier -> {
             if(notifier != null) {
-                requestsMap.remove(requestId);
                 log.info(String.format("processPacket. Request with id: {} successfully executed by node", requestId));
 
                 Response response = new Response(ResponseStatus.SUCCESS);
                 response.put(SystemConstants.executionStatus, ExecutionStatus.READY);
                 response.put(SystemConstants.requestId, requestId);
                 notifier.sendResponse(response);
-            }
+            }});
         }
 
         if(packet.getData().get(SystemConstants.nodeTaskStatus) == null && packet.getData().get(SystemConstants.nodeTaskStatus) == null){
