@@ -2,8 +2,8 @@ package com.shouse.node.PowerSocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import shouse.core.Common.NodeType;
-import shouse.core.Common.SystemConstants;
+import shouse.core.common.NodeType;
+import shouse.core.common.SystemConstants;
 import shouse.core.api.Notifier;
 import shouse.core.communication.Communicator;
 import shouse.core.communication.Packet;
@@ -15,9 +15,7 @@ import shouse.core.node.response.ExecutionStatus;
 import shouse.core.node.response.Response;
 import shouse.core.node.response.ResponseStatus;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class PowerSocketNode extends Node {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
