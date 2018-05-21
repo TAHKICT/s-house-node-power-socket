@@ -1,14 +1,14 @@
-package com.shouse.node.PowerSocket;
+package com.shouse.node.powerSocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import shouse.core.common.NodeType;
 import shouse.core.common.SystemConstants;
 import shouse.core.api.Notifier;
 import shouse.core.communication.Communicator;
 import shouse.core.communication.Packet;
 import shouse.core.node.Node;
 import shouse.core.node.NodeInfo;
+import shouse.core.node.NodeLocation;
 import shouse.core.node.request.Request;
 import shouse.core.node.request.RequestIdGenerator;
 import shouse.core.node.response.ExecutionStatus;
@@ -21,14 +21,13 @@ public class PowerSocketNode extends Node {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private Communicator communicator;
-    private int nodeLocationId;
     private String description;
     private boolean isSwitched;
     private List<Notifier> notifiers;
 
-    public PowerSocketNode(int id, int nodeLocationId, String description, Communicator communicator, List<Notifier> notifiers) {
-        super(id,  NodeType.POWER_SOCKET.getId(), false);
-        this.nodeLocationId = nodeLocationId;
+    public PowerSocketNode(int id, NodeLocation nodeLocation, String description, Communicator communicator, List<Notifier> notifiers) {
+        super(id, nodeLocation);
+        setTypeName(this.getClass().getSimpleName());
         this.description = description;
         this.communicator = communicator;
         this.notifiers = notifiers;
@@ -45,7 +44,7 @@ public class PowerSocketNode extends Node {
 
     @Override
     public NodeInfo getNodeInfo() {
-        return new PowerSocketNodeInfo(getId(),getTypeId(), nodeLocationId, description, isActive(), isSwitched);
+        return new PowerSocketNodeInfo(getId(), getTypeName(), getNodeLocation(), description, isActive(), isSwitched);
     }
 
     @Override
@@ -113,5 +112,16 @@ public class PowerSocketNode extends Node {
 
         }
 
+    }
+
+    @Override
+    public String toString() {
+        return "PowerSocketNode{" +
+                ", nodeLocation=" + getNodeLocation() +
+                ", description='" + description + '\'' +
+                ", isSwitched=" + isSwitched +
+                ", notifiers=" + notifiers +
+                ", typeName=" + getTypeName() +
+                '}';
     }
 }
