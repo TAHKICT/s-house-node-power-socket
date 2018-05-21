@@ -25,7 +25,7 @@ public class PowerSocketPacketProcessor implements PacketProcessor {
     @Override
     public boolean isApplicable(Packet packet) {
 
-        if(packet.getData().get("nodeTypeName").equals(PowerSocketNode.class.getName())) {
+        if(packet.getData().get("nodeTypeName").equals(PowerSocketNode.class.getSimpleName())) {
             log.info("isApplicable. true. packet: " + packet);
             return true;
         }

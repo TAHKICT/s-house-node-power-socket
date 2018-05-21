@@ -51,16 +51,16 @@ public class PowerSocketNode extends Node {
     public Response process(Request request) {
         Response response = new Response();
 
-        if(!isActive()){
+        if (!isActive()) {
             log.error("process. Request processing fail. Parameter value is wrong.");
             response.setStatus(ResponseStatus.FAILURE);
             response.put(SystemConstants.failureMessage, "Node is not active.");
             return response;
         }
 
-        if(request.getBody().getParameter("switch").equals("checked"))
+        if (request.getBody().getParameter("switch").equals("checked"))
             setSwitched(true);
-        else if(request.getBody().getParameter("switch").equals("unchecked"))
+        else if (request.getBody().getParameter("switch").equals("unchecked"))
             setSwitched(false);
         else {
             log.error("process. Request processing fail. Parameter value is wrong.");
@@ -85,33 +85,42 @@ public class PowerSocketNode extends Node {
 
     @Override
     public void processPacket(Packet packet) {
+        log.info(Thread.currentThread().getStackTrace()[1].getMethodName() + ": " + packet);
 
-        if(packet.getData().get(SystemConstants.nodeTaskStatus).equals("executed")){
+        //Alive packet detection
+        if (packet.getData().get(SystemConstants.requestId) != null
+                && packet.getData().get(SystemConstants.nodeTaskStatus) != null
+                && packet.getData().get("switched") != null
+                && packet.getData().get(SystemConstants.requestId).equals("")
+                && packet.getData().get(SystemConstants.nodeTaskStatus).equals("")
+                && packet.getData().get("switched").equals("")) {
+            log.info("Received alive packet from node.");
+            setActive(true);
+            return;
+        }
+
+        //Executed task detection
+        if (packet.getData().get(SystemConstants.nodeTaskStatus) != null
+                && packet.getData().get(SystemConstants.nodeTaskStatus).equals("executed")
+                && packet.getData().get(SystemConstants.requestId) != null
+                && !packet.getData().get(SystemConstants.requestId).equals("")) {
+
             String requestId = packet.getData().get(SystemConstants.requestId);
-            notifiers.stream().forEach(notifier -> {
-            if(notifier != null) {
+
+            if ((packet.getData().get("switched") != null && packet.getData().get("switched").equals("on") && isSwitched)
+                    ||
+                    (packet.getData().get("switched") != null && packet.getData().get("switched").equals("off") && !isSwitched)) {
                 log.info(String.format("processPacket. Request with id: {} successfully executed by node", requestId));
 
                 Response response = new Response(ResponseStatus.SUCCESS);
                 response.put(SystemConstants.executionStatus, ExecutionStatus.READY);
                 response.put(SystemConstants.requestId, requestId);
-                notifier.sendResponse(response);
-            }});
-        }
-
-        if(packet.getData().get(SystemConstants.nodeTaskStatus) == null && packet.getData().get(SystemConstants.nodeTaskStatus) == null){
-            boolean isSwitchedReal;
-            if(packet.getData().get("switched").equals("on"))
-                isSwitchedReal = true;
-            else if(packet.getData().get("switched").equals("off"))
-                isSwitchedReal = true;
-            else {
-                log.error("processPacket. Invalid packet from node. Packet: " + packet);
+                notifiers.stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
                 return;
             }
-
         }
 
+        log.error("processPacket. Invalid packet from node. Packet: " + packet);
     }
 
     @Override
