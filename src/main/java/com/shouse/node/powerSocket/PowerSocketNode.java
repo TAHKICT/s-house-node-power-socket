@@ -18,7 +18,7 @@ import shouse.core.node.response.ResponseStatus;
 import java.util.List;
 
 public class PowerSocketNode extends Node {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private Communicator communicator;
     private String description;
@@ -31,7 +31,7 @@ public class PowerSocketNode extends Node {
         this.description = description;
         this.communicator = communicator;
         this.notifiers = notifiers;
-        log.info("PowerSocketNode created");
+        LOGGER.info("PowerSocketNode created");
     }
 
     public boolean isSwitched() {
@@ -52,18 +52,18 @@ public class PowerSocketNode extends Node {
         Response response = new Response();
 
         if (!isActive()) {
-            log.error("process. Request processing fail. Parameter value is wrong.");
+            LOGGER.error("process. Request processing fail. Node is not active.");
             response.setStatus(ResponseStatus.FAILURE);
             response.put(SystemConstants.failureMessage, "Node is not active.");
             return response;
         }
 
-        if (request.getBody().getParameter("switch").equals("checked"))
+        if (request.getBody().getParameter("isSwitched").equals("true"))
             setSwitched(true);
-        else if (request.getBody().getParameter("switch").equals("unchecked"))
+        else if (request.getBody().getParameter("isSwitched").equals("false"))
             setSwitched(false);
         else {
-            log.error("process. Request processing fail. Parameter value is wrong.");
+            LOGGER.error("process. Request processing fail. Parameter value is wrong.");
             response.setStatus(ResponseStatus.FAILURE);
             response.put(SystemConstants.failureMessage, "Parameter value is wrong.");
             return response;
@@ -78,14 +78,17 @@ public class PowerSocketNode extends Node {
         Packet packet = new Packet(getId());
         packet.putData("switch", String.valueOf(isSwitched()));
         packet.putData(SystemConstants.requestId, requestId);
-        communicator.sendPacket(packet);
 
+        LOGGER.info("process. send packet: ".concat(packet.toString()));
+//        communicator.sendPacket(packet);
+
+        LOGGER.info("Send response: ".concat(response.toString()));
         return response;
     }
 
     @Override
     public void processPacket(Packet packet) {
-        log.info(Thread.currentThread().getStackTrace()[1].getMethodName() + ": " + packet);
+        LOGGER.info(Thread.currentThread().getStackTrace()[1].getMethodName() + ": " + packet);
 
         //Alive packet detection
         if (packet.getData().get(SystemConstants.requestId) != null
@@ -94,7 +97,7 @@ public class PowerSocketNode extends Node {
                 && packet.getData().get(SystemConstants.requestId).equals("")
                 && packet.getData().get(SystemConstants.nodeTaskStatus).equals("")
                 && packet.getData().get("switched").equals("")) {
-            log.info("Received alive packet from node.");
+            LOGGER.info("Received alive packet from node.");
             setActive(true);
             return;
         }
@@ -110,7 +113,7 @@ public class PowerSocketNode extends Node {
             if ((packet.getData().get("switched") != null && packet.getData().get("switched").equals("on") && isSwitched)
                     ||
                     (packet.getData().get("switched") != null && packet.getData().get("switched").equals("off") && !isSwitched)) {
-                log.info(String.format("processPacket. Request with id: {} successfully executed by node", requestId));
+                LOGGER.info(String.format("processPacket. Request with id: {} successfully executed by node", requestId));
 
                 Response response = new Response(ResponseStatus.SUCCESS);
                 response.put(SystemConstants.executionStatus, ExecutionStatus.READY);
@@ -120,7 +123,7 @@ public class PowerSocketNode extends Node {
             }
         }
 
-        log.error("processPacket. Invalid packet from node. Packet: " + packet);
+        LOGGER.error("processPacket. Invalid packet from node. Packet: " + packet);
     }
 
     @Override

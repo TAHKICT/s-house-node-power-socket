@@ -25,8 +25,10 @@ public class PowerSocketRequestProcessor implements RequestProcessor {
 
     @Override
     public boolean isApplicable(Request request) {
-        if(request.getBody().getParameter("nodeTypeName") != null && request.getBody().getParameter("nodeTypeName").equals(PowerSocketNode.class.getName()))
+        if(request.getBody().getParameter("nodeTypeName") != null && request.getBody().getParameter("nodeTypeName").equals(PowerSocketNode.class.getSimpleName())) {
+            log.info("isApplicable: true");
             return true;
+        }
 
         return false;
     }
