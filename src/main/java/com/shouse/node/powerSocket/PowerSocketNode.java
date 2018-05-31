@@ -49,10 +49,11 @@ public class PowerSocketNode extends Node {
 
     @Override
     public Response process(Request request) {
+        LOGGER.info(Thread.currentThread().getStackTrace()[1].getMethodName().concat(": ").concat(request.toString()));
         Response response = new Response();
 
         if (!isActive()) {
-            LOGGER.error("process. Request processing fail. Node is not active.");
+            LOGGER.error("Request processing fail. Node is not active.");
             response.setStatus(ResponseStatus.FAILURE);
             response.put(SystemConstants.failureMessage, "Node is not active.");
             return response;
@@ -63,26 +64,24 @@ public class PowerSocketNode extends Node {
         else if (request.getBody().getParameter("isSwitched").equals("false"))
             setSwitched(false);
         else {
-            LOGGER.error("process. Request processing fail. Parameter value is wrong.");
+            LOGGER.error("Request processing fail. Parameter value is wrong.");
             response.setStatus(ResponseStatus.FAILURE);
             response.put(SystemConstants.failureMessage, "Parameter value is wrong.");
             return response;
         }
 
-        String requestId = String.valueOf(RequestIdGenerator.generateId());
-
         response.setStatus(ResponseStatus.SUCCESS);
         response.put(SystemConstants.executionStatus, ExecutionStatus.IN_PROGRESS);
-        response.put(SystemConstants.requestId, requestId);
+        response.put(SystemConstants.requestId, request.getBody().getParameter(SystemConstants.requestId));
 
         Packet packet = new Packet(getId());
         packet.putData("switch", String.valueOf(isSwitched()));
-        packet.putData(SystemConstants.requestId, requestId);
+        packet.putData(SystemConstants.requestId, request.getBody().getParameter(SystemConstants.requestId));
 
-        LOGGER.info("process. send packet: ".concat(packet.toString()));
-//        communicator.sendPacket(packet);
+        LOGGER.info("Control packet sending: ".concat(packet.toString()));
+        communicator.sendPacket(packet);
 
-        LOGGER.info("Send response: ".concat(response.toString()));
+        LOGGER.info("Return temporary: ".concat(response.toString()));
         return response;
     }
 
