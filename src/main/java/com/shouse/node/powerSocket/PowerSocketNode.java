@@ -71,6 +71,7 @@ public class PowerSocketNode extends Node {
         }
 
         response.setStatus(ResponseStatus.SUCCESS);
+        response.put(SystemConstants.nodeId, getId());
         response.put(SystemConstants.executionStatus, ExecutionStatus.IN_PROGRESS);
         response.put(SystemConstants.requestId, request.getBody().getParameter(SystemConstants.requestId));
 
