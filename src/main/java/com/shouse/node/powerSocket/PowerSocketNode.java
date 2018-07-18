@@ -10,7 +10,6 @@ import shouse.core.node.Node;
 import shouse.core.node.NodeInfo;
 import shouse.core.node.NodeLocation;
 import shouse.core.node.request.Request;
-import shouse.core.node.request.RequestIdGenerator;
 import shouse.core.node.response.ExecutionStatus;
 import shouse.core.node.response.Response;
 import shouse.core.node.response.ResponseStatus;
@@ -23,6 +22,7 @@ public class PowerSocketNode extends Node {
     private Communicator communicator;
     private String description;
     private boolean isSwitched;
+    private Boolean requestedSwitchState = null;
     private List<Notifier> notifiers;
 
     public PowerSocketNode(int id, NodeLocation nodeLocation, String description, Communicator communicator, List<Notifier> notifiers) {
@@ -60,9 +60,11 @@ public class PowerSocketNode extends Node {
         }
 
         if (request.getBody().getParameter("isSwitched").equals("true"))
-            setSwitched(true);
+            requestedSwitchState = true;
+//            setSwitched(true);
         else if (request.getBody().getParameter("isSwitched").equals("false"))
-            setSwitched(false);
+            requestedSwitchState = false;
+//            setSwitched(false);
         else {
             LOGGER.error("Request processing fail. Parameter value is wrong.");
             response.setStatus(ResponseStatus.FAILURE);
@@ -91,12 +93,8 @@ public class PowerSocketNode extends Node {
         LOGGER.info(Thread.currentThread().getStackTrace()[1].getMethodName() + ": " + packet);
 
         //Alive packet detection
-        if (packet.getData().get(SystemConstants.requestId) != null
-                && packet.getData().get(SystemConstants.nodeTaskStatus) != null
-                && packet.getData().get("switched") != null
-                && packet.getData().get(SystemConstants.requestId).equals("")
-                && packet.getData().get(SystemConstants.nodeTaskStatus).equals("")
-                && packet.getData().get("switched").equals("")) {
+        if (packet.getData().get(SystemConstants.requestId) == null
+                && packet.getData().get(SystemConstants.nodeTaskStatus) == null) {
             LOGGER.info("Received alive packet from node.");
             setActive(true);
             return;
@@ -110,9 +108,13 @@ public class PowerSocketNode extends Node {
 
             String requestId = packet.getData().get(SystemConstants.requestId);
 
-            if ((packet.getData().get("switched") != null && packet.getData().get("switched").equals("on") && isSwitched)
+            if ((packet.getData().get("switched") != null) &&
+                    ((packet.getData().get("switched").equals("true") && requestedSwitchState == true)
                     ||
-                    (packet.getData().get("switched") != null && packet.getData().get("switched").equals("off") && !isSwitched)) {
+                    (packet.getData().get("switched").equals("false") &&  requestedSwitchState == false)
+                    )
+                ){
+                isSwitched = requestedSwitchState;
                 LOGGER.info(String.format("processPacket. Request with id: {} successfully executed by node", requestId));
 
                 Response response = new Response(ResponseStatus.SUCCESS);
