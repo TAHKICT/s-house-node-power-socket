@@ -97,6 +97,13 @@ public class PowerSocketNode extends Node {
                 && packet.getData().get(SystemConstants.nodeTaskStatus) == null) {
             LOGGER.info("Received alive packet from node.");
             setActive(true);
+
+            Response response = new Response(ResponseStatus.SUCCESS);
+            response.put(SystemConstants.topic, SystemConstants.nodeAliveTopic);
+            response.put(SystemConstants.nodeAliveState, true);
+            response.put(SystemConstants.nodeId, getId());
+            notifiers.stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
+
             return;
         }
 
