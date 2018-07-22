@@ -59,12 +59,16 @@ public class PowerSocketNode extends Node {
             return response;
         }
 
-        if (request.getBody().getParameter("isSwitched").equals("true"))
+        if (request.getBody().getParameter("isSwitched").equals("true")) {
             requestedSwitchState = true;
+            LOGGER.info("requestedSwitchState:"+requestedSwitchState);
 //            setSwitched(true);
-        else if (request.getBody().getParameter("isSwitched").equals("false"))
+        }
+        else if (request.getBody().getParameter("isSwitched").equals("false")) {
             requestedSwitchState = false;
+            LOGGER.info("requestedSwitchState:"+requestedSwitchState);
 //            setSwitched(false);
+        }
         else {
             LOGGER.error("Request processing fail. Parameter value is wrong.");
             response.setStatus(ResponseStatus.FAILURE);
@@ -78,8 +82,8 @@ public class PowerSocketNode extends Node {
         response.put(SystemConstants.requestId, request.getBody().getParameter(SystemConstants.requestId));
 
         Packet packet = new Packet(getId());
-        packet.putData("switch", String.valueOf(isSwitched()));
-        packet.putData(SystemConstants.requestId, request.getBody().getParameter(SystemConstants.requestId));
+        packet.putData("switch", String.valueOf(requestedSwitchState));
+        packet.putData("requestId", request.getBody().getParameter(SystemConstants.requestId));
 
         LOGGER.info("Control packet sending: ".concat(packet.toString()));
         communicator.sendPacket(packet);
@@ -112,6 +116,8 @@ public class PowerSocketNode extends Node {
                 && packet.getData().get(SystemConstants.nodeTaskStatus).equals("executed")
                 && packet.getData().get(SystemConstants.requestId) != null
                 && !packet.getData().get(SystemConstants.requestId).equals("")) {
+
+            LOGGER.info("Executed task detected. Requested switch state:"+requestedSwitchState);
 
             String requestId = packet.getData().get(SystemConstants.requestId);
 
