@@ -62,12 +62,10 @@ public class PowerSocketNode extends Node {
         if (request.getBody().getParameter("isSwitched").equals("true")) {
             requestedSwitchState = true;
             LOGGER.info("requestedSwitchState:"+requestedSwitchState);
-//            setSwitched(true);
         }
         else if (request.getBody().getParameter("isSwitched").equals("false")) {
             requestedSwitchState = false;
             LOGGER.info("requestedSwitchState:"+requestedSwitchState);
-//            setSwitched(false);
         }
         else {
             LOGGER.error("Request processing fail. Parameter value is wrong.");
@@ -99,9 +97,14 @@ public class PowerSocketNode extends Node {
         //Alive packet detection
         if (packet.getData().get(SystemConstants.requestId) == null
                 && packet.getData().get(SystemConstants.nodeTaskStatus) == null) {
-            LOGGER.info("Received alive packet from node.");
-            setActive(true);
+            LOGGER.info("Received alive packet from Power Socket Node.");
 
+            if(isActive()) {
+                LOGGER.info("Node already active.");
+                return;
+            }
+
+            setActive(true);
             Response response = new Response(ResponseStatus.SUCCESS);
             response.put(SystemConstants.topic, SystemConstants.nodeAliveTopic);
             response.put(SystemConstants.nodeAliveState, true);
