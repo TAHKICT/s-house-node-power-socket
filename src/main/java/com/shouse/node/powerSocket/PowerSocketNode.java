@@ -14,6 +14,7 @@ import shouse.core.node.response.ExecutionStatus;
 import shouse.core.node.response.Response;
 import shouse.core.node.response.ResponseStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class PowerSocketNode extends Node {
@@ -99,8 +100,10 @@ public class PowerSocketNode extends Node {
                 && packet.getData().get(SystemConstants.nodeTaskStatus) == null) {
             LOGGER.info("Received alive packet from Power Socket Node.");
 
+            setLastAliveDate(LocalDateTime.now());
+
             if(isActive()) {
-                LOGGER.info("Node already active.");
+                LOGGER.info("Node already active. Last alive date updated.");
                 return;
             }
 
