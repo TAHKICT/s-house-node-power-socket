@@ -4,7 +4,7 @@ import com.shouse.node.powerSocket.PowerSocketNode;
 import shouse.core.api.DefaultRequestProcessor;
 import shouse.core.api.Notifier;
 import shouse.core.api.RequestProcessor;
-import shouse.core.communication.Communicator;
+import shouse.core.communication.NodeCommunicator;
 import shouse.core.communication.DefaultPacketProcessor;
 import shouse.core.communication.PacketProcessor;
 import shouse.core.controller.NodeContainer;
@@ -14,7 +14,6 @@ import shouse.core.node.Node;
 import shouse.core.node.NodeLocation;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,7 +22,7 @@ import java.util.Set;
 @NodeConfig(name = "powerSocket")
 public class PowerSocketfactory implements NodeFactory<PowerSocketModel> {
 
-    private Set<Communicator> communicators;
+    private Set<NodeCommunicator> nodeCommunicators;
     private Set<Notifier> notifiers;
     private RequestProcessor requestProcessor;
     private PacketProcessor packetProcessor;
@@ -31,7 +30,14 @@ public class PowerSocketfactory implements NodeFactory<PowerSocketModel> {
     @Override
     public Node createNode(PowerSocketModel details) {
         NodeLocation kitchen = new NodeLocation(0, "Kitchen");
-        return new PowerSocketNode(1, kitchen,"стиральная машина", communicators.stream().findFirst().get(), new ArrayList<>(notifiers));
+        return new PowerSocketNode(1, kitchen,"стиральная машина", nodeCommunicators.stream().findFirst().get(), new ArrayList<>(notifiers));
+    }
+
+    //TODO: created only to run application. Should be removed.
+    @Override
+    public Node createNode() {
+        NodeLocation kitchen = new NodeLocation(0, "Kitchen");
+        return new PowerSocketNode(1, kitchen,"стиральная машина", nodeCommunicators.stream().findFirst().get(), new ArrayList<>(notifiers));
     }
 
     @Override
@@ -56,8 +62,8 @@ public class PowerSocketfactory implements NodeFactory<PowerSocketModel> {
     }
 
     @Override
-    public void setCommunicators(Set<Communicator> communicators) {
-        this.communicators = communicators;
+    public void setNodeCommunicators(Set<NodeCommunicator> nodeCommunicators) {
+        this.nodeCommunicators = nodeCommunicators;
     }
 
     @Override

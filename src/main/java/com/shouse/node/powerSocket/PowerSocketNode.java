@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import shouse.core.common.SystemConstants;
 import shouse.core.api.Notifier;
-import shouse.core.communication.Communicator;
+import shouse.core.communication.NodeCommunicator;
 import shouse.core.communication.Packet;
 import shouse.core.node.Node;
 import shouse.core.node.NodeInfo;
@@ -20,17 +20,17 @@ import java.util.List;
 public class PowerSocketNode extends Node {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
-    private Communicator communicator;
+    private NodeCommunicator nodeCommunicator;
     private String description;
     private boolean isSwitched;
     private Boolean requestedSwitchState = null;
     private List<Notifier> notifiers;
 
-    public PowerSocketNode(int id, NodeLocation nodeLocation, String description, Communicator communicator, List<Notifier> notifiers) {
+    public PowerSocketNode(int id, NodeLocation nodeLocation, String description, NodeCommunicator nodeCommunicator, List<Notifier> notifiers) {
         super(id, nodeLocation);
         setTypeName(this.getClass().getSimpleName());
         this.description = description;
-        this.communicator = communicator;
+        this.nodeCommunicator = nodeCommunicator;
         this.notifiers = notifiers;
         LOGGER.info("PowerSocketNode created");
     }
@@ -45,7 +45,8 @@ public class PowerSocketNode extends Node {
 
     @Override
     public NodeInfo getNodeInfo() {
-        return new PowerSocketNodeInfo(getId(), getTypeName(), getNodeLocation(), description, isActive(), isSwitched);
+        return new PowerSocketNodeInfo(this);
+//        return new PowerSocketNodeInfo(getId(), getTypeName(), getNodeLocation(), description, isActive(), isSwitched);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class PowerSocketNode extends Node {
         packet.putData("requestId", request.getBody().getParameter(SystemConstants.requestId));
 
         LOGGER.info("Control packet sending: ".concat(packet.toString()));
-        communicator.sendPacket(packet);
+        nodeCommunicator.sendPacket(packet);
 
         LOGGER.info("Return temporary: ".concat(response.toString()));
         return response;
@@ -145,6 +146,14 @@ public class PowerSocketNode extends Node {
         }
 
         LOGGER.error("processPacket. Invalid packet from node. Packet: " + packet);
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Boolean getRequestedSwitchState() {
+        return requestedSwitchState;
     }
 
     @Override

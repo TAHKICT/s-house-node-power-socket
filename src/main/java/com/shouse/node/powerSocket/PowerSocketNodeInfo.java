@@ -11,6 +11,20 @@ public class PowerSocketNodeInfo extends NodeInfo {
         this.isSwitched = isSwitched;
     }
 
+    public PowerSocketNodeInfo(PowerSocketNode powerSocketNode){
+        super(powerSocketNode.getId(),
+                powerSocketNode.getTypeName(),
+                powerSocketNode.getNodeLocation(),
+                powerSocketNode.getDescription(),
+                powerSocketNode.isActive());
+        this.isSwitched = powerSocketNode.isSwitched();
+
+        if(powerSocketNode.getRequestedSwitchState() != null)
+            setInProcess(powerSocketNode.isSwitched() != powerSocketNode.getRequestedSwitchState());
+        else
+            setInProcess(false);
+    }
+
     public boolean isSwitched() {
         return isSwitched;
     }
