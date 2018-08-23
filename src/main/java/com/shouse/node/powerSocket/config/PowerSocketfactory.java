@@ -21,7 +21,7 @@ import java.util.Set;
  * Created by Maks on 01.07.2018.
  */
 @NodeConfig(name = "powerSocket")
-public class PowerSocketfactory implements NodeFactory {
+public class PowerSocketfactory implements NodeFactory<PowerSocketModel> {
 
     private Set<Communicator> communicators;
     private Set<Notifier> notifiers;
@@ -29,7 +29,7 @@ public class PowerSocketfactory implements NodeFactory {
     private PacketProcessor packetProcessor;
 
     @Override
-    public Node createNode(Map<String, Object> details) {
+    public Node createNode(PowerSocketModel details) {
         NodeLocation kitchen = new NodeLocation(0, "Kitchen");
         return new PowerSocketNode(1, kitchen,"стиральная машина", communicators.stream().findFirst().get(), new ArrayList<>(notifiers));
     }
