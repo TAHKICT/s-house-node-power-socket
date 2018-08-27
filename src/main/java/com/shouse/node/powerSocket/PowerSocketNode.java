@@ -156,6 +156,12 @@ public class PowerSocketNode extends Node {
         return requestedSwitchState;
     }
 
+    public void setActive(boolean active){
+        super.setActive(active);
+
+        requestedSwitchState = isSwitched;
+    }
+
     @Override
     public String toString() {
         return "PowerSocketNode{" +
