@@ -20,18 +20,12 @@ import java.util.List;
 public class PowerSocketNode extends Node {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
-    private NodeCommunicator nodeCommunicator;
-    private String description;
     private boolean isSwitched;
     private Boolean requestedSwitchState = null;
-    private List<Notifier> notifiers;
 
     public PowerSocketNode(int id, NodeLocation nodeLocation, String description, NodeCommunicator nodeCommunicator, List<Notifier> notifiers) {
-        super(id, nodeLocation);
+        super(id, nodeLocation, nodeCommunicator, notifiers, description);
         setTypeName(this.getClass().getSimpleName());
-        this.description = description;
-        this.nodeCommunicator = nodeCommunicator;
-        this.notifiers = notifiers;
         LOGGER.info("PowerSocketNode created");
     }
 
@@ -50,7 +44,7 @@ public class PowerSocketNode extends Node {
     }
 
     @Override
-    public Response process(Request request) {
+    public Response processRequest(Request request) {
         LOGGER.info(Thread.currentThread().getStackTrace()[1].getMethodName().concat(": ").concat(request.toString()));
         Response response = new Response();
 
@@ -86,7 +80,7 @@ public class PowerSocketNode extends Node {
         packet.putData("requestId", request.getBody().getParameter(SystemConstants.requestId));
 
         LOGGER.info("Control packet sending: ".concat(packet.toString()));
-        nodeCommunicator.sendPacket(packet);
+        getNodeCommunicator().sendPacket(packet);
 
         LOGGER.info("Return temporary: ".concat(response.toString()));
         return response;
@@ -113,7 +107,7 @@ public class PowerSocketNode extends Node {
             response.put(SystemConstants.topic, SystemConstants.nodeAliveTopic);
             response.put(SystemConstants.nodeAliveState, true);
             response.put(SystemConstants.nodeId, getId());
-            notifiers.stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
+            getNotifiers().stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
 
             return;
         }
@@ -140,7 +134,7 @@ public class PowerSocketNode extends Node {
                 Response response = new Response(ResponseStatus.SUCCESS);
                 response.put(SystemConstants.executionStatus, ExecutionStatus.READY);
                 response.put(SystemConstants.requestId, requestId);
-                notifiers.stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
+                getNotifiers().stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
                 return;
             }
         }
@@ -148,14 +142,11 @@ public class PowerSocketNode extends Node {
         LOGGER.error("processPacket. Invalid packet from node. Packet: " + packet);
     }
 
-    public String getDescription() {
-        return description;
-    }
-
     public Boolean getRequestedSwitchState() {
         return requestedSwitchState;
     }
 
+    @Override
     public void setActive(boolean active){
         super.setActive(active);
 
@@ -166,10 +157,17 @@ public class PowerSocketNode extends Node {
     public String toString() {
         return "PowerSocketNode{" +
                 ", nodeLocation=" + getNodeLocation() +
-                ", description='" + description + '\'' +
+                ", description='" + getDescription() + '\'' +
                 ", isSwitched=" + isSwitched +
-                ", notifiers=" + notifiers +
+                ", notifiers=" + getNotifiers() +
                 ", typeName=" + getTypeName() +
                 '}';
+    }
+
+    public boolean isInProcess() {
+        if(requestedSwitchState != null)
+            return isSwitched() != getRequestedSwitchState();
+        else
+            return false;
     }
 }
